@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+
+# Build artifacts (生成出来的文章产物，不进 repo)
+*.wechat.html
+*.preview.html
+*.cover.jpg
+*.draft.json
+*.publish-preview.html
+
+# 例外：examples 目录里的产物可以保留作为参考
+!examples/**/*.wechat.html
+!examples/**/*.preview.html
+!examples/**/*.cover.jpg
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+
+# Local secrets (永远不进 repo)
+config.yaml
+.env
+.env.local
