@@ -184,7 +184,7 @@ raoqiu-html-to-wechat/
 ## 🔗 相关 skill
 
 - [`Rao-HTML-PPT-Builder`](https://github.com/raoqiu29-bot/Rao-HTML-PPT-Builder) — 麦肯锡风 HTML PPT 生成
-- `raoqiu-xhs-builder` — 小红书图文生成（私有）
+- `raoqiu-html-to-xhs` — 小红书图文生成（私有）
 
 ## 📄 License
 

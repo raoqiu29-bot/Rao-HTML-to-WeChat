@@ -1,5 +1,19 @@
 # 常见错误及修复
 
+## 0. ❌ HTML 超过 20,000 字符（草稿 API 硬限制）
+
+**症状**：脚本输出 `❌ HTML 长度 XXXXX 字符，已超过 WeChat 草稿 API 上限 20000`。
+
+**原因**：微信公众号草稿 API 单篇 `content` 字段硬限制 < 20,000 字符（包括所有 inline style，inline 比纯文本占用大约 5-10 倍）。
+
+**修复**：
+- **拆分文章**：长文分成上下两篇
+- **精简内容**：删非必要段落
+- **减少 inline style 占用**：现有脚本已优化到最简语法，难有进一步节省空间
+- **减少装饰元素**：去掉非必要表格、引用框、列表
+
+参考来源：[`geekjourneyx/md2wechat-skill`](https://github.com/geekjourneyx/md2wechat-skill) 项目踩坑记录。
+
 ## 1. `invalid ip not in whitelist`
 
 **症状**：`create_draft` 失败，错误信息显示 IP 不在白名单。

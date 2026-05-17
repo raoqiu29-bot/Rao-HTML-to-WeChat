@@ -109,6 +109,35 @@ background: #FBFBFD;
 - **没有 footnote / metadata stack** —— 所有元素 ≥ 14px，手机缩略图也读得清
 - 标题字号自适应：60 → 58 → 56 → ... → 44 找最大能 1 行装下的字号
 
+## GFM Alert 提示框（v1.1 新增）
+
+5 种语义化提示框，参考 [`doocs/md`](https://github.com/doocs/md) 的 GFM Alert 实现，简化成饶秋风格。
+
+| Markdown 写法 | 渲染铭牌 | 何时用 |
+|---|---|---|
+| `> [!NOTE]` | 注 | 补充信息、背景说明 |
+| `> [!TIP]` | 小贴士 | 实用建议、节省时间的做法 |
+| `> [!IMPORTANT]` | 重点 | 核心结论、最关键的判断 |
+| `> [!WARNING]` | 注意 | 潜在风险、容易踩的坑 |
+| `> [!CAUTION]` | 警示 | 严重后果、不可挽回的错误 |
+
+视觉处理：墨蓝左边框 3px + 墨蓝铭牌（11.5px / 700 / letter-spacing 3px）+ ink 正文（15px / 1.85）。**没有 colored box、没有 icon、没有 emoji**，符合视觉禁区硬规则。
+
+与普通 `>` blockquote 的差异：
+- blockquote：sub gray 文字，没有铭牌
+- alert：ink 文字 + 墨蓝铭牌
+
+## WeChat 草稿字符上限（v1.1 新增）
+
+**微信公众号草稿 API 硬限制：单篇 content 字段 < 20,000 字符**（包括所有 inline style）。
+
+`build_apple_style_publish.py` 在构建时检查：
+- `< 19,000` → 安全
+- `19,000–19,999` → ⚠️ 警告，建议精简
+- `≥ 20,000` → ❌ 错误，草稿创建会失败
+
+参考：[`geekjourneyx/md2wechat-skill`](https://github.com/geekjourneyx/md2wechat-skill) 项目踩坑记录。
+
 ## 视觉禁区（硬规则）
 
 以下元素**一律不进入**公众号文章（封面 / 正文 / 所有自动渲染都遵守）。

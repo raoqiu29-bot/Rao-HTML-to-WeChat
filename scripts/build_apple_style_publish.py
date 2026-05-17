@@ -65,6 +65,25 @@ FONT_STACK_HEADING = (
 )
 
 
+# GFM Alert labels — 把 GitHub `> [!XXX]` 转成中文铭牌。
+# 参考 doocs/md (12.6k★) 的 GFM Alert 实现，简化为饶秋风格的
+# 单一墨蓝边框 + 铭牌标签，符合视觉禁区"no colored boxes"硬规则。
+ALERT_LABELS: dict[str, str] = {
+    "NOTE": "注",
+    "TIP": "小贴士",
+    "IMPORTANT": "重点",
+    "WARNING": "注意",
+    "CAUTION": "警示",
+}
+
+
+# 微信公众号草稿 API 硬限制：单篇 content 字段 < 20,000 字符。
+# 参考 geekjourneyx/md2wechat-skill (2.2k★) 项目踩坑记录。
+# 超过会发不出去，所以在 19,000 字预警。
+WECHAT_DRAFT_CHAR_LIMIT = 20000
+WECHAT_DRAFT_WARN_AT = 19000
+
+
 AUTHOR_BIO_HTML = (
     f'<section style="margin:44px 0 8px 0;padding-top:24px;'
     f'border-top:1px solid {C["line"]};">'
@@ -318,14 +337,57 @@ def render_body(body: str) -> str:
 
         if line.startswith(">"):
             flush_all()
-            quote = line.lstrip("> ").strip()
-            out.append(
-                f'<blockquote style="margin:18px 0;padding:4px 0 4px 16px;'
-                f'border-left:3px solid {C["accent"]};color:{C["sub"]};'
-                f'font-size:15.5px;line-height:1.9;font-style:normal;">'
-                f'{inline(quote)}</blockquote>'
+            # Collect ALL consecutive '>' lines into one quote block.
+            # Supports GFM Alert syntax: `> [!NOTE]` / `> [!TIP]` / etc.
+            quote_lines: list[str] = []
+            while i < len(lines):
+                ql = lines[i].rstrip()
+                if not ql.startswith(">"):
+                    break
+                # Strip leading '> ' or '>'
+                if ql.startswith("> "):
+                    quote_lines.append(ql[2:])
+                elif ql == ">":
+                    quote_lines.append("")
+                else:
+                    quote_lines.append(ql[1:])
+                i += 1
+
+            # GFM Alert detection: first line is exactly `[!TYPE]`
+            alert_match = (
+                re.match(r"^\[!(\w+)\]\s*$", quote_lines[0])
+                if quote_lines else None
             )
-            i += 1
+
+            if alert_match:
+                alert_type = alert_match.group(1).upper()
+                label = ALERT_LABELS.get(alert_type, alert_type)
+                # Join body lines (skip the first [!TYPE] line); preserve
+                # paragraph breaks by joining empty lines with double-space.
+                body_text = " ".join(
+                    l.strip() for l in quote_lines[1:] if l.strip()
+                )
+                out.append(
+                    f'<section style="margin:22px 0;padding:8px 0 8px 18px;'
+                    f'border-left:3px solid {C["accent"]};">'
+                    f'<p style="margin:0 0 6px 0;color:{C["accent"]};'
+                    f'font-size:11.5px;font-weight:700;letter-spacing:3px;">'
+                    f'{label}</p>'
+                    f'<p style="margin:0;color:{C["ink"]};font-size:15px;'
+                    f'line-height:1.85;">{inline(body_text)}</p>'
+                    f'</section>'
+                )
+            else:
+                # Regular blockquote: join all lines with a space
+                full_text = " ".join(
+                    l.strip() for l in quote_lines if l.strip()
+                )
+                out.append(
+                    f'<blockquote style="margin:18px 0;padding:4px 0 4px 16px;'
+                    f'border-left:3px solid {C["accent"]};color:{C["sub"]};'
+                    f'font-size:15.5px;line-height:1.9;font-style:normal;">'
+                    f'{inline(full_text)}</blockquote>'
+                )
             continue
 
         b = re.match(r"^[-*]\s+(.+)$", line)
@@ -658,6 +720,23 @@ def main() -> None:
 
     html_body = render_article(meta, body)
     HTML_OUT.write_text(html_body, encoding="utf-8")
+
+    # WeChat 草稿 API 硬限制：单篇 content 字段 < 20,000 字符。
+    # 超过会发不出去。19,000 字预警，让作者有空间调整。
+    import sys
+    html_chars = len(html_body)
+    if html_chars >= WECHAT_DRAFT_CHAR_LIMIT:
+        print(
+            f"❌ HTML 长度 {html_chars} 字符，已超过 WeChat 草稿 API 上限 "
+            f"{WECHAT_DRAFT_CHAR_LIMIT}。草稿创建会失败，请精简内容或拆分文章。",
+            file=sys.stderr,
+        )
+    elif html_chars >= WECHAT_DRAFT_WARN_AT:
+        print(
+            f"⚠️  HTML 长度 {html_chars} 字符，接近 WeChat 草稿 API 上限 "
+            f"{WECHAT_DRAFT_CHAR_LIMIT}。建议精简内容，或减少 inline style 占用。",
+            file=sys.stderr,
+        )
 
     # Preview body bg matches the article section bg, so the preview no longer
     # looks like a "card on a gray page" — it mimics how WeChat actually renders

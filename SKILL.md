@@ -41,7 +41,7 @@ license: MIT
 
 不该用此技能的情况：
 - 用户要做 PPT / Keynote / 演示稿 → 用 `raoqiu-slide-builder`
-- 用户要做小红书图文 → 用 `raoqiu-xhs-builder`
+- 用户要做小红书图文 → 用 `raoqiu-html-to-xhs`
 - 用户要做营销活动方案 → 用 `marketing-doc-formatter`
 
 ## 设计语言概要（详细见 `references/design-system.md`）
@@ -142,6 +142,42 @@ category: "METHOD"                           # 可选
 ### 3. 分割线用 `---`
 
 会渲染成居中三点 `·  ·  ·`（serif，14px muted）—— 出版物分章节的标准做法。
+
+### 4. GFM Alert 提示框（v1.1 新增）
+
+参考 [`doocs/md`](https://github.com/doocs/md) 的实现，支持 5 种语义化提示框。在 markdown 里写：
+
+```markdown
+> [!NOTE]
+> 这是一个 NOTE 注释。补充信息、背景说明。
+
+> [!TIP]
+> 这是一个 TIP 小贴士。实用建议、节省时间的做法。
+
+> [!IMPORTANT]
+> 这是一个 IMPORTANT 重点。核心结论、最关键的判断。
+
+> [!WARNING]
+> 这是一个 WARNING 注意。潜在风险、容易踩的坑。
+
+> [!CAUTION]
+> 这是一个 CAUTION 警示。严重后果、不可挽回的错误。
+```
+
+渲染：墨蓝左边框 + 墨蓝铭牌标签 + ink 正文。符合视觉禁区"no colored boxes"硬规则。
+
+### 5. WeChat 草稿字符上限（v1.1 新增）
+
+**微信公众号草稿 API 单篇硬限制：< 20,000 字符**（包括所有 inline style）。
+
+`build_apple_style_publish.py` 会在构建时检查：
+- HTML > 19,000 字符 → ⚠️ 警告（建议精简）
+- HTML > 20,000 字符 → ❌ 错误（草稿创建会失败）
+
+精简方法：
+- 拆分长文成上下两篇
+- 减少 inline `<style>` 占用（当前已经用最简语法）
+- 删除非必要的装饰元素
 
 ## 已验证环境前置
 
