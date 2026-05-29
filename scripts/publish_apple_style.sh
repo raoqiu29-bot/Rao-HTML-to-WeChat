@@ -80,6 +80,31 @@ PREVIEW="${BASE}.preview.html"
 COVER="${BASE}.cover.jpg"
 DRAFT_JSON="${BASE}.draft.json"
 
+echo "→ Pre-flight: 检查 digest 长度（微信 description 上限约 120 字，inspect 的 128 偏松会放行发不出去的稿）"
+WECHAT_MD="$MD" "$PY" - <<'PYEOF'
+import os, sys
+text = open(os.environ["WECHAT_MD"], encoding="utf-8").read()
+digest = ""
+if text.startswith("---\n"):
+    end = text.find("\n---\n", 4)
+    if end != -1:
+        for line in text[4:end].splitlines():
+            if line.startswith("digest:"):
+                v = line.split(":", 1)[1].strip()
+                if (v.startswith('"') and v.endswith('"')) or (v.startswith("'") and v.endswith("'")):
+                    v = v[1:-1]
+                digest = v
+                break
+n = len(digest)
+LIMIT = 118
+if n > LIMIT:
+    sys.stderr.write(f"\n[X] digest {n} 字 > 安全上限 {LIMIT} 字，微信会拒（errcode 45004 description out of limit）。\n")
+    sys.stderr.write(f"    请把 frontmatter 的 digest 精简到 {LIMIT} 字以内再发。\n")
+    sys.stderr.write(f"    当前 digest（{n} 字）: {digest}\n\n")
+    sys.exit(3)
+print(f"    digest {n} 字, OK（安全上限 {LIMIT}）")
+PYEOF
+
 echo "→ Building Apple-style assets from: $MD"
 WECHAT_MD="$MD" WECHAT_HTML="$HTML" WECHAT_COVER="$COVER" WECHAT_PREVIEW="$PREVIEW" \
   "$PY" build_apple_style_publish.py >/dev/null

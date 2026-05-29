@@ -179,6 +179,12 @@ category: "METHOD"                           # 可选
 - 减少 inline `<style>` 占用（当前已经用最简语法）
 - 删除非必要的装饰元素
 
+### 6. digest 摘要字数上限（v1.2 新增）
+
+**微信 description（摘要）实际限制约 120 字**，比 `md2wechat inspect` 用的 128 阈值更严。digest 超限会在 `create_draft` 阶段报 `errcode 45004 description out of limit` 失败——而 inspect 的 readiness 检查会放行（128 阈值偏松），导致构建、上传封面全白做，最后一步才失败。
+
+`publish_apple_style.sh` 已加**发布前预检**：构建前先检查 frontmatter 的 digest，**> 118 字直接拦截退出（exit 3）**，打印当前 digest 全文和字数，提示精简。把 digest 控制在 118 字以内即可。
+
 ## 已验证环境前置
 
 - `md2wechat` CLI 已安装（PATH 应含 `~/.local/bin`）
